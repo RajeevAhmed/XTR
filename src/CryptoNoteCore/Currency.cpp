@@ -99,22 +99,30 @@ bool Currency::generateGenesisBlock() {
 bool Currency::getBlockReward(size_t medianSize, size_t currentBlockSize, uint64_t alreadyGeneratedCoins,
   uint64_t fee, uint64_t& reward, int64_t& emissionChange) const {
   assert(alreadyGeneratedCoins <= m_moneySupply);
-  assert(m_emissionSpeedFactor > 0 && m_emissionSpeedFactor <= 8 * sizeof(uint64_t));
-
-  uint64_t baseReward = (m_moneySupply - alreadyGeneratedCoins) >> m_emissionSpeedFactor;
-
+  // below are cryptonote codes
+  //#assert(m_emissionSpeedFactor > 0 && m_emissionSpeedFactor <= 8 * sizeof(uint64_t));
+  //#uint64_t baseReward = (m_moneySupply - alreadyGeneratedCoins) >> m_emissionSpeedFactor;
+  uint64_t baseReward = baseRewardFunction(alreadyGeneratedCoins, height);
+  size_t blockGrantedFullRewardZone = m_blockGrantedFullRewardZone;
   medianSize = std::max(medianSize, m_blockGrantedFullRewardZone);
   if (currentBlockSize > UINT64_C(2) * medianSize) {
-    logger(TRACE) << "Block cumulative size is too big: " << currentBlockSize << ", expected less than " << 2 * medianSize;
-    return false;
-  }
+        LOG_PRINT_L4("Block cumulative size is too big: " << currentBlockSize << ", expected less than " << 2 * medianSize);
+        return false;
+      }
+  
+  //{ # the code from Cryptonote.
+   // logger(TRACE) << "Block cumulative size is too big: " << currentBlockSize << ", expected less than " << 2 * medianSize;
+   // return false;
+ // }
 
   uint64_t penalizedBaseReward = getPenalizedAmount(baseReward, medianSize, currentBlockSize);
-  uint64_t penalizedFee = getPenalizedAmount(fee, medianSize, currentBlockSize);
+  // Orginal codes from cryptonote
+  //uint64_t penalizedFee = getPenalizedAmount(fee, medianSize, currentBlockSize);
 
-  emissionChange = penalizedBaseReward - (fee - penalizedFee);
-  reward = penalizedBaseReward + penalizedFee;
-
+  //emissionChange = penalizedBaseReward - (fee - penalizedFee);
+  //reward = penalizedBaseReward + penalizedFee;
+  emissionChange = penalizedBaseReward;
+  reward = penalizedBaseReward + fee;
   return true;
 }
 
